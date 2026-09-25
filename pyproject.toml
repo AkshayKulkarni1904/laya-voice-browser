@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "laya-voice-browser-windows"
+version = "0.2.0"
+description = "LayaBrowse Windows: Voice-control Edge, Chrome, or any Chromium browser with local Laya decisions and Dynamic Island overlay"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Antigravity Pair Programmer & Open Source Contributors" }]
+dependencies = [
+  "websockets>=13.0",
+  "pydantic>=2.0",
+  "psutil>=5.9",
+  "pywin32>=306",
+]
+
+[project.optional-dependencies]
+ml = [
+  "laya>=0.3.0",
+  "torch>=2.0.0",
+  "transformers>=4.48.0",
+]
+gui = [
+  "PySide6>=6.5.0",
+]
+audio = [
+  "sounddevice>=0.4.6",
+  "faster-whisper>=1.0.0",
+  "SpeechRecognition>=3.10.0",
+]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.1.0",
+]
+all = [
+  "laya-voice-browser-windows[ml,gui,audio,dev]",
+]
+
+[project.scripts]
+layabrowse = "laya_voice_browser_win.cli:main"
+layabrowse-win = "laya_voice_browser_win.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/laya_voice_browser_win"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,61 @@
+"""Settings for LayaBrowse Windows.
+
+Stored at `%LOCALAPPDATA%\\LayaBrowse\\config.json`; `LAYA_CONFIG` overrides the path.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from dataclasses import dataclass, fields
+from pathlib import Path
+
+
+@dataclass(frozen=True)
+class Settings:
+    hotkey: str = "left_control"
+    double_tap_ms: float = 350.0
+    mic_sensitivity: str = "medium"
+    speaking_style: str = "polite"
+    browser: str = "auto"
+    search_engine: str = "auto"
+    sounds: bool = True
+    island: bool = True
+
+
+def config_path() -> Path:
+    override = os.getenv("LAYA_CONFIG")
+    if override:
+        return Path(override)
+    local_app_data = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    return local_app_data / "LayaBrowse" / "config.json"
+
+
+_cache: tuple[float, Settings] | None = None
+
+
+def load() -> Settings:
+    """Current settings; re-read only when the file changes, and defaults for anything missing or bad."""
+    global _cache
+    path = config_path()
+    try:
+        modified = path.stat().st_mtime
+    except OSError:
+        return Settings()
+    if _cache and _cache[0] == modified:
+        return _cache[1]
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return Settings()
+    defaults = Settings()
+    values = {}
+    for field in fields(Settings):
+        value = raw.get(field.name) if isinstance(raw, dict) else None
+        default = getattr(defaults, field.name)
+        values[field.name] = value if isinstance(value, type(default)) or (
+            isinstance(default, float) and isinstance(value, int)
+        ) else default
+    settings = Settings(**values)
+    _cache = (modified, settings)
+    return settings
